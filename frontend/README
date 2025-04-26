@@ -1,0 +1,187 @@
+const formularioUsuario = document.getElementById('formulario-usuario');
+const usuariosLista = document.getElementById('usuarios-lista');
+const formularioEmpleado = document.getElementById('formulario-empleado');
+const empleadosLista = document.getElementById('empleados-lista');
+
+// Función para cargar los usuarios
+    function cargarUsuarios() {
+        fetch('http://localhost:5000/api/usuarios')
+            .then(response => response.json())
+            .then(data => {
+                usuariosLista.innerHTML = '';
+                data.forEach(user => {
+                    const li = document.createElement('li');
+                    li.textContent = user.nombre;
+                    const btn = document.createElement('button');
+                    btn.textContent = 'Eliminar';
+                    btn.onclick = () => eliminarUsuario(user.id);
+                    li.appendChild(btn);
+                    usuariosLista.appendChild(li);
+                });
+            });
+    }
+  
+    // Función para agregar un nuevo usuario
+    formularioUsuario.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const nombre = document.getElementById('nombre-usuario').value;
+        fetch('http://localhost:5000/api/usuarios', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nombre })
+        }).then(() => {
+            document.getElementById('nombre-usuario').value = '';
+            cargarUsuarios();
+        });
+    });
+  
+    // Función para eliminar un usuario
+    function eliminarUsuario(id) {
+        fetch(`http://localhost:5000/api/usuarios/${id}`, {
+            method: 'DELETE'
+        }).then(cargarUsuarios);
+    }
+  
+    // Función para cargar los empleados
+    function cargarEmpleados() {
+        fetch('http://localhost:5000/api/empleados')
+            .then(response => response.json())
+            .then(data => {
+                empleadosLista.innerHTML = '';
+                data.forEach(emp => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${emp.nombre}</td>
+                        <td>${emp.cargo}</td>
+                        <td>${emp.dias_laborados}</td>
+                        <td>${emp.salario_basico}</td>
+                        <td>${emp.aux_transporte}</td>
+                        <td><button onclick="eliminarEmpleado(${emp.id})">Eliminar</button></td>
+                    `;
+                    empleadosLista.appendChild(tr);
+                });
+            });
+    }
+  
+    // Función para agregar un nuevo empleado
+    formularioEmpleado.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const nuevoEmpleado = {
+            nombre: document.getElementById('nombre-empleado').value,
+            cargo: document.getElementById('cargo-empleado').value,
+            dias_laborados: document.getElementById('dias-laborados').value,
+            salario_basico: document.getElementById('salario-basico').value,
+            aux_transporte: document.getElementById('aux-transporte').value,
+            salario_devengado: 0,
+            bonificacion: 0,
+            salario_neto: 0,
+            servicios_funerarios: 0,
+            seguro_vida: 0,
+            salud: 0,
+            pension: 0,
+            total_deducciones: 0,
+            mes_pago: 'Abril',
+            email: 'correo@dominio.com'
+        };
+        fetch('http://localhost:5000/api/empleados', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(nuevoEmpleado)
+        }).then(() => {
+            cargarEmpleados();
+            document.getElementById('formulario-empleado').reset();
+        });
+    });
+  
+    // Función para eliminar un empleado
+    function eliminarEmpleado(id) {
+        fetch(`http://localhost:5000/api/empleados/${id}`, {
+            method: 'DELETE'
+        }).then(cargarEmpleados);
+    }
+
+    window.cambiarPantalla = function(opcion) {
+        let html = "";
+  
+        if (opcion === "mensual") {
+            html = "<h2>Nómina Mensual</h2><p>Esta es la sección de la nómina mensual. Aquí puedes ver el resumen mensual de los pagos.</p>";
+            document.body.style.opacity = "1";
+            mainContainer.style.border = "2px solid black";
+            mainContainer.style.backgroundColor = "transparent";
+            contenidoPantalla.style.display = "block";
+            contenidoPantalla.style.textAlign = "left";
+            contenidoPantalla.style.height = "auto";
+        } else if (opcion === "primal") {
+            html = "<h2>Nómina Primal</h2><p>Aquí encontrarás los datos correspondientes a la nómina primal de los empleados.</p>";
+            document.body.style.opacity = "1";
+            mainContainer.style.border = "2px solid black";
+            mainContainer.style.backgroundColor = "transparent";
+            contenidoPantalla.style.textAlign = "left";
+            contenidoPantalla.style.height = "auto";
+        } else if (opcion === "perfil") {
+            html = "<h2>Perfil de Pago</h2><p>Consulta el perfil de pago individual de cada trabajador en esta sección.</p>";
+            document.body.style.opacity = "1";
+            mainContainer.style.border = "2px solid black";
+            mainContainer.style.backgroundColor = "transparent";
+            contenidoPantalla.style.textAlign = "left";
+            contenidoPantalla.style.height = "auto";
+        } else {
+            html = `
+            <div style="display: flex; justify-content: center; align-items: center; height: 100%; flex-direction: column;">
+                <h2>Pantalla principal</h2>
+                <p>Bienvenido/a al sistema de nómina BSG. Selecciona una opción del menú para comenzar.</p>
+            </div>`;
+            document.body.style.opacity = "1";
+            mainContainer.style.border = "none";
+            mainContainer.style.backgroundColor = "transparent";
+            contenidoPantalla.style.display = "flex";
+            contenidoPantalla.style.justifyContent = "center";
+            contenidoPantalla.style.alignItems = "center";
+            contenidoPantalla.style.height = "100%";
+        }
+  
+        contenidoPantalla.innerHTML = html;
+        toggleMenu();
+    };
+  
+    // Llamada inicial a cargar los usuarios y empleados cuando la página está lista
+    cargarUsuarios();
+    cargarEmpleados();
+    cambiarPantalla(''); // Cargar la pantalla inicial
+  
+    // Función para manejar la navegación entre pantallas
+  function toggleMenu() {
+    const menu = document.getElementById("menu");
+    menu.style.display = (menu.style.display === "none" || menu.style.display === "") ? "block" : "none";
+  }
+  document.addEventListener('DOMContentLoaded', () => {
+    const menuToggle = document.querySelector('.menu-toggle');
+    const rightMenu = document.querySelector('.right-menu');
+  
+    menuToggle.addEventListener('click', () => {
+        rightMenu.style.display = rightMenu.style.display === 'none' ? 'block' : 'none';
+    });
+  
+    // You would add JavaScript functionality here to:
+    // 1. Handle clicks on employee names in the left sidebar to display details in the main content area.
+    // 2. Implement the download functionality for the download icons.
+    // 3. Implement the actions for the right sidebar menu items and the profile button.
+  });
+  const button = document.getElementById('button-desplegable');
+  const dropdown = document.getElementById('dropdown-menu');
+  
+button.addEventListener('click', () => {
+    if (dropdown.style.display === 'block') {
+        dropdown.style.display = 'none';
+    } else {
+        dropdown.style.display = 'block';
+    }
+});
+
+// Opcional: Ocultar el menú si se da click fuera de él
+window.addEventListener('click', (e) => {
+    if (!button.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.style.display = 'none';
+    }
+});
+  
